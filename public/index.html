@@ -250,7 +250,7 @@
             <div class="mt-4 p-4 bg-gray-100 rounded-xl shadow-inner">
                 <h4 class="text-lg font-semibold text-gray-700 mb-2">Calificaciones para este tema:</h4>
                 <div id="current-song-ratings-list" class="flex flex-wrap justify-center gap-2 mb-2">
-                    <!-- Las calificaciones se renderizarán aquí -->
+                    <!--  Las calificaciones se renderizarán aquí -->
                 </div>
                 <p id="current-song-average-rating" class="text-lg font-bold text-gray-800">Promedio: -</p>
             </div>
@@ -322,18 +322,10 @@
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut, connectAuthEmulator } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, addDoc, doc, getDoc, setDoc, query, where, deleteDoc, updateDoc, deleteField, connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getFunctions, httpsCallable, connectFunctionsEmulator } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
+        import { firebaseConfig } from "/__/firebase/init.json";
 
         // Global variables provided by the canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = {
-          apiKey: "AIzaSyC5jn2BfYU8uj-uqJ6XaUjfBSpwYWY6nF0",
-          authDomain: "gig-log-14233.firebaseapp.com",
-          projectId: "gig-log-14233",
-          storageBucket: "gig-log-14233.firebasestorage.app",
-          messagingSenderId: "676482708006",
-          appId: "1:676482708006:web:f3b4e522759c8df791ace7",
-          measurementId: "G-4W2MHZX7N3"
-        };
 
         let db, auth, functions, userId;
         let selectedGroupId = null;
@@ -1362,6 +1354,22 @@
 
             finishRehearsalBtn.addEventListener('click', finishRehearsal);
 
+            console.log('Attempting to attach listener to rehearsalHistoryList');
+            if (rehearsalHistoryList) {
+                rehearsalHistoryList.addEventListener('click', (e) => {
+                    console.log('Click detected on history list. Target:', e.target);
+                    const deleteBtn = e.target.closest('.delete-rehearsal-btn');
+                    if (deleteBtn) {
+                        console.log('Delete button found!', deleteBtn);
+                        rehearsalIdToDelete = deleteBtn.dataset.id;
+                        showMessage(`¿Estás seguro de que quieres eliminar este ensayo? Esta acción no se puede deshacer.`, true, 'rehearsal');
+                    }
+                });
+                console.log('Listener attached successfully.');
+            } else {
+                console.error('Error: rehearsalHistoryList element not found!');
+            }
+
             confirmDeleteBtn.addEventListener('click', async () => {
                 const type = confirmDeleteBtn.dataset.confirmationType;
                 if (type === 'group') {
@@ -1403,11 +1411,23 @@
                         }
                         hideModal();
                     }
-                } 
+                } else if (type === 'rehearsal') {
+                    if (rehearsalIdToDelete && selectedGroupId) {
+                        try {
+                            const rehearsalRef = doc(db, 'groups', selectedGroupId, 'rehearsals', rehearsalIdToDelete);
+                            await deleteDoc(rehearsalRef);
+                            showMessage('Ensayo eliminado correctamente.');
+                        } catch (error) {
+                            console.error("Error deleting rehearsal:", error);
+                            showMessage(`Error al eliminar el ensayo: ${error.message}`);
+                        }
+                        hideModal();
+                    }
+                }
             });
 
             initFirebase(); // Call initFirebase here
         });
     </script>
-</body>
-</html>"<!-- test -->"
+</body><!-- Trigger redeploy -->
+</html>
